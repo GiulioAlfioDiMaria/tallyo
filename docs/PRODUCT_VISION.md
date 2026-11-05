@@ -2,7 +2,7 @@
 
 > **Tallyo sa quanto puoi spendere oggi — contanti compresi.**
 
-Documento di lavoro: analisi della bozza iniziale, panorama competitivo, proposte di differenziazione e definizione del prodotto (MVP → v2). Le parti marcate **[DA DECIDERE]** sono scelte aperte.
+Documento di lavoro: analisi della bozza iniziale, panorama competitivo, proposte di differenziazione e definizione del prodotto (MVP → v2). Le parti marcate **[DA DECIDERE]** sono scelte aperte. Dettagli tecnici in [`TECH_SPEC.md`](TECH_SPEC.md).
 
 ---
 
@@ -68,7 +68,7 @@ Incrociando le due dimensioni rilevanti:
 
 ## 3. Posizionamento
 
-**Per chi:** 20–40enni italiani con almeno una neobank/carta digitale, che usano ancora contanti, con entrate che arrivano a date precise (stipendio, borsa di studio) o irregolari (freelance, P.IVA forfettaria).
+**Per chi:** 20–40enni italiani con almeno una neobank/carta digitale, che usano ancora contanti, con entrate che arrivano a date precise (stipendio, borsa di studio) o irregolari (freelance, P.IVA forfettaria). Entrambi i profili sono supportati fin dal core.
 
 **Promessa:** *"Ogni mattina sai quanto puoi spendere oggi, senza fare conti e senza registrare ogni caffè."*
 
@@ -139,7 +139,11 @@ Domanda prima della spesa, non dopo: *"Posso comprare scarpe da 120 €?"* → *
 - **Allarmi:** aumento prezzo abbonamento ("Netflix è passato da 13,99 a 15,99"), abbonamenti duplicati (Apple Music + Spotify), prove gratuite in scadenza, abbonamenti inutilizzati da mesi.
 - Guide di disdetta per i servizi italiani più comuni (palestre, pay-TV, telefonia).
 
-### 4.7 Copilot conversazionale "con le prove"
+### 4.7 Lyo — l'assistente AI "con le prove"
+
+**Lyo** è il nome dell'assistente dentro Tallyo (Tal-**lyo**: il nome nasce dal brand stesso, è breve, pronunciabile in ogni lingua e funziona bene come comando vocale — "Lyo, quanto posso spendere oggi?").
+
+Personalità di Lyo: *calmo, diretto, mai giudicante*. Parla come un amico bravo con i numeri, non come una banca. Dà del tu, usa frasi brevi, non usa emoji a raffica, non fa prediche ("Hai speso troppo!") ma propone ("Se questa settimana resti sotto i 20 €/giorno, arrivi al 27 con 60 € di margine").
 
 - Domande in linguaggio naturale ("Quanto mi è costata la macchina quest'anno?").
 - L'LLM traduce la domanda in una query sul DB → il motore calcola → l'LLM spiega. **Ogni risposta mostra le transazioni usate** (cliccabili). Niente numeri inventati.
@@ -164,7 +168,7 @@ Domanda prima della spesa, non dopo: *"Posso comprare scarpe da 120 €?"* → *
 | GoCardless (ex Nordigen) come connettore | **Verificare la disponibilità attuale**: GoCardless ha chiuso Bank Account Data ai nuovi clienti nel 2025. Alternative EU: Enable Banking, Tink, Salt Edge, Yapily. Per uso personale sui propri conti Enable Banking offre un accesso gratuito. |
 | Parsing email di HYPE | Fragile; da usare solo se HYPE invia email per ogni transazione (da verificare). |
 | Whisper per la voce | Ok lato server, ma su mobile lo speech-to-text di sistema (iOS/Android) supporta l'italiano, è gratuito e on-device: preferibile per privacy e latenza. |
-| Report sintetici "da contabile" | Commodity. Tenerli minimi; il valore è nella home e nel copilot. |
+| Report sintetici "da contabile" | Commodity. Tenerli minimi; il valore è nella home e in Lyo. |
 | Gamification / badge | Sconsigliata: il tono "calmo" è parte del posizionamento. |
 
 ---
@@ -185,29 +189,39 @@ Domanda prima della spesa, non dopo: *"Posso comprare scarpe da 120 €?"* → *
 2. **Calendario:** vista giorni fino al prossimo accredito (e mesi successivi) con uscite previste, accantonamenti e saldo proiettato giorno per giorno.
 3. **Movimenti:** lista unificata conti + contanti, con commercianti normalizzati e categorie; filtri e ricerca naturale.
 4. **Piani:** ricorrenze, fondi annuali, obiettivi, budget per categoria (opzionali).
-5. **Copilot:** chat + insight settimanali + check-in domenicale.
+5. **Lyo:** chat + insight settimanali + check-in domenicale.
 
 ### 6.3 Roadmap
 
-**Fase 0 — Prototipo personale (4–6 settimane)**
+Ordine scelto: prima il **core** (deve funzionare per dipendenti *e* freelance), poi ciò che rende il numero più affidabile, poi ciò che fa crescere l'uso quotidiano, infine i moduli che differenziano sul mercato.
+
+**Fase 0 — Core personale (iOS + Android, banca collegata)**
 Obiettivo: usarla tu, ogni giorno, con HYPE e i tuoi contanti.
-- Import movimenti HYPE (open banking via Enable Banking per i propri conti, oppure import CSV/estratto conto come ripiego).
-- Tasca contanti con prelievi automatici + inserimento vocale/manuale.
+- Collegamento open banking reale (HYPE per primo) tramite provider PSD2 in modalità "uso personale".
+- Movimenti unificati conti + Tasca contanti (prelievi ATM automatici, inserimento rapido manuale/vocale).
 - Rilevamento ricorrenze base + conferma utente.
-- Safe-to-spend giornaliero ancorato allo stipendio con spiegazione.
+- Profilo entrate: **stipendio fisso** (ciclo da accredito ad accredito) oppure **entrate irregolari/P.IVA** (vedi TECH_SPEC §4.3).
+- Accantonamento tasse/INPS per P.IVA forfettaria (senza questo il safe-to-spend di un freelance è sbagliato, quindi sta nel core).
+- Safe-to-spend giornaliero con spiegazione riga per riga.
 
-**Fase 1 — MVP pubblico (beta chiusa, 50–200 utenti)**
-- Multi-banca, onboarding, categorizzazione AI, OCR scontrini.
-- Fondi annuali (sinking funds) con lista italiana pre-compilata.
-- Riconciliazione Tasca e burn rate.
-- Weekly check-in.
-- Metriche chiave: % utenti che aprono la home ≥ 4 giorni/settimana; errore medio del safe-to-spend vs. realtà; retention a 30 giorni.
+**Fase 1 — Affidabilità del numero**
+- Fondi annuali (sinking funds) con lista italiana pre-compilata (RC auto, bollo, TARI, …).
+- Riconciliazione Tasca + burn rate contanti.
+- Categorizzazione AI e normalizzazione commercianti.
 
-**Fase 2 — Differenzianti**
-- Modulo Fisco 730, "Posso permettermelo?", copilot conversazionale con prove, alert abbonamenti, widget.
+**Fase 2 — Abitudine quotidiana (Lyo v1)**
+- Lyo: domande in linguaggio naturale con prove, check-in domenicale, 1–2 insight a settimana.
+- "Posso permettermelo?".
+- Widget home iOS/Android con il safe-to-spend del giorno.
 
-**Fase 3 — Espansione**
-- Modalità P.IVA forfettaria, spese condivise/coppia, garanzie, Satispay/buoni pasto.
+**Fase 3 — Differenzianti di mercato**
+- OCR scontrini + modulo Fisco 730.
+- Alert abbonamenti (aumenti, duplicati, prove gratuite).
+- Beta chiusa pubblica (50–200 utenti), metriche: % utenti che aprono la home ≥ 4 giorni/settimana; errore medio del safe-to-spend; retention a 30 giorni.
+
+**Fase 4 — Lancio ed espansione**
+- Pubblicazione App Store / Google Play (richiede la soluzione AISP, vedi §6.5).
+- Spese condivise/coppia, garanzie, Satispay/buoni pasto, multi-valuta.
 
 ### 6.4 Architettura (proposta)
 
@@ -234,12 +248,12 @@ Modello dati di base: `accounts` (banca, contanti, buoni pasto), `transactions`,
 - **PSD2/AISP:** per servire utenti terzi con dati bancari serve una licenza AISP o operare tramite un provider licenziato (modello "agent"/white-label). Per il prototipo personale non è un problema.
 - **Rinnovo consenso:** le connessioni open banking richiedono riconferma periodica (tipicamente ogni 90/180 giorni a seconda di banca e provider) → progettare un flusso di riconnessione indolore.
 - **GDPR:** dati finanziari sensibili → hosting UE, DPA con i fornitori LLM, minimizzazione dei dati inviati ai modelli (es. niente IBAN/nominativi nel prompt).
-- **Consulenza finanziaria:** il copilot deve restare su budgeting e spesa; evitare consigli su investimenti (attività regolamentata).
+- **Consulenza finanziaria:** Lyo deve restare su budgeting e spesa; evitare consigli su investimenti (attività regolamentata).
 - **Dipendenza da provider esterni:** astrarre il connettore bancario dietro un'interfaccia per poterlo sostituire.
 
 ### 6.6 Modello di business [DA DECIDERE]
 
-- **Freemium:** gratis 1 conto + contanti + safe-to-spend; **Plus** (~3,99 €/mese o ~29,99 €/anno) multi-conto, OCR illimitato, copilot, Fisco 730, fondi annuali.
+- **Freemium:** gratis 1 conto + contanti + safe-to-spend; **Plus** (~3,99 €/mese o ~29,99 €/anno) multi-conto, OCR illimitato, Lyo completo, Fisco 730, fondi annuali.
 - I costi variabili principali (connessioni open banking per utente, chiamate LLM/OCR) vanno misurati in Fase 1 per validare il prezzo.
 - Mai monetizzare vendendo dati o prodotti finanziari: incoerente col posizionamento.
 
@@ -262,10 +276,19 @@ Possibili claim:
 
 ---
 
-## 8. Decisioni aperte
+## 8. Decisioni prese
 
-1. **Target iniziale:** dipendenti con stipendio fisso, oppure anche freelance/P.IVA fin da subito?
-2. **Piattaforma:** iOS + Android insieme (React Native/Flutter) o una sola piattaforma prima?
-3. **Ambizione:** strumento personale che può diventare prodotto, oppure startup fin dall'inizio (con impatto su licenza AISP, budget, tempi)?
-4. **Connettore bancario per il prototipo:** open banking subito (Enable Banking) o import CSV per partire più veloce?
-5. **Modulo da prototipare per primo dopo il core:** Fisco 730 o Fondi annuali?
+| Tema | Decisione |
+|---|---|
+| Ambizione | Prima uso personale per validare, poi possibile startup / pubblicazione sugli store |
+| Piattaforme | iOS **e** Android fin da subito |
+| Banca | Collegamento open banking reale fin dal core (HYPE per primo) |
+| Utenti target | Versatili: dipendenti con stipendio fisso **e** freelance/P.IVA |
+| Ordine dopo il core | Proposto in §6.3 (affidabilità → abitudine → differenzianti → lancio) |
+| Assistente AI | Si chiama **Lyo** |
+
+## 9. Decisioni ancora aperte
+
+1. Provider open banking definitivo (dipende dalla copertura reale di HYPE: primo task tecnico).
+2. Modello di business e prezzo (da validare con i costi misurati in beta).
+3. Strategia AISP per il lancio pubblico (provider licenziato in modalità agent vs. licenza propria).
