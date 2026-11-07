@@ -1,6 +1,6 @@
 # Tallyo — Specifica tecnica (v0.1)
 
-Riferimento prodotto: [`PRODUCT_VISION.md`](PRODUCT_VISION.md). Questo documento copre il **core (Fase 0)**: app iOS + Android, banca collegata, contanti, ricorrenze, profili dipendente/P.IVA, safe-to-spend.
+Riferimento prodotto: [`PRODUCT_VISION.md`](PRODUCT_VISION.md). Identità visiva: [`VISUAL_IDENTITY.md`](VISUAL_IDENTITY.md). Questo documento copre il **core (Fase 0)**: app iOS + Android, banca collegata, contanti, ricorrenze, profili dipendente/P.IVA, safe-to-spend.
 
 ---
 
